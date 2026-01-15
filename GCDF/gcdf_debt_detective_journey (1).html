@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <title>The Debt Detective</title>
+  <style>
+    /* Google Fonts: Inter */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --primary: #115740;
+      /* AidData Green */
+      --secondary: #d2b070;
+      /* AidData Gold */
+      --grey-light: #EAEAEA;
+      --bg-page: #F8F9FA;
+      /* Very light grey for page background to make card pop */
+      --bg-card: #FFFFFF;
+      --text-main: #111111;
+      --text-muted: #555555;
+      --shadow-card: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+      /* Soft, premium shadow */
+      --shadow-hover: 0 20px 40px -10px rgba(0, 0, 0, 0.12);
+      --radius: 12px;
+    }
+
+    body {
+      background: var(--bg-page);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Branding Header - Clean & Minimal */
+    .branding-header {
+      width: 100%;
+      padding: 0 40px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+      z-index: 200;
+      position: relative;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      /* Subtle separator */
+    }
+
+    .logo {
+      height: 36px;
+      /* Slightly refined size */
+      width: auto;
+    }
+
+    .header-title {
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Progress Bar - Integrated into the top of the card or header? Let's put it top of card */
+    .progress-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: var(--radius) var(--radius) 0 0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--secondary);
+      width: 0%;
+      transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Main Container */
+    .screen {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow-y: auto;
+      /* Allow scrolling if content is tall */
+    }
+
+    /* The "Card" */
+    .content-card {
+      background: var(--bg-page);
+      width: 100%;
+      max-width: 800px;
+      padding: 60px;
+      border-radius: var(--radius);
+      position: relative;
+      transform: translateY(20px);
+      opacity: 0;
+      animation: cardEntrance 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    @keyframes cardEntrance {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .content-card.exit-left {
+      animation: cardExitLeft 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes cardExitLeft {
+      to {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+    }
+
+    /* Typography */
+    .chapter {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--secondary);
+      margin-bottom: 24px;
+    }
+
+    .title {
+      font-size: clamp(32px, 4vw, 42px);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--primary);
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .text {
+      font-size: 18px;
+      line-height: 1.7;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      max-width: 90%;
+      text-align: center;
+    }
+
+    /* Chapter Icons */
+    .chapter-icon {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 24px;
+      stroke-width: 1.5;
+      stroke: var(--primary);
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: draw 2s ease forwards, pulse 3s infinite 2s;
+    }
+
+    @keyframes draw {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    /* Specialized Components */
+    .message {
+      background: #F9FAFB;
+      border: 1px solid #EDEDED;
+      border-left: 4px solid var(--secondary);
+      padding: 24px 32px;
+      border-radius: 8px;
+      margin: 16px 0 32px;
+      width: 100%;
+      text-align: left;
+    }
+
+    .message-from {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .message-text {
+      font-size: 16px;
+      font-style: italic;
+      color: var(--text-main);
+    }
+
+    .question {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    /* Choices Grid */
+    .choices-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .choice {
+      background: #FFFFFF;
+      border: 1px solid var(--grey-light);
+      padding: 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      text-align: left;
+      position: relative;
+    }
+
+    .choice:hover {
+      border-color: var(--secondary);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .choice:active {
+      transform: translateY(-1px);
+    }
+
+    .choice-label {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 17px;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .choice-hint {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Feedback & Results */
+    .feedback-container {
+      text-align: center;
+      width: 100%;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 24px;
+    }
+
+    .badge.strong {
+      background: #E6F3EF;
+      color: var(--primary);
+    }
+
+    .badge.weak {
+      background: #FEE2E2;
+      color: #DC2626;
+    }
+
+    .badge.moderate {
+      background: #FFF7ED;
+      color: #D97706;
+    }
+
+
+
+    .feedback-text {
+      font-size: 18px;
+      line-height: 1.6;
+      color: var(--text-main);
+    }
+
+    .report-score {
+      font-size: 100px;
+      font-weight: 900;
+      color: var(--primary);
+      line-height: 1;
+      margin: 30px 0;
+    }
+
+    /* Navigation */
+    .next-btn {
+      margin-top: 40px;
+      padding: 14px 40px;
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(17, 87, 64, 0.2);
+    }
+
+    .next-btn:hover {
+      background: #0d4632;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(17, 87, 64, 0.3);
+    }
+
+
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      .branding-header {
+        padding: 0 20px;
+      }
+
+      .content-card {
+        padding: 30px 20px;
+      }
+
+      .title {
+        font-size: 28px;
+      }
+
+      .screen {
+        padding: 10px;
+      }
+    }
+
+    /* Loading State */
+    .loader-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(17, 87, 64, 0.1);
+      border-left-color: var(--secondary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 24px;
+    }
+
+    .loading-text {
+      font-size: 14px;
+      letter-spacing: 0.15em;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--primary);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 0.6;
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0.6;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="progress-container">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <div class="screen">
+    <div id="app" style="width: 100%; display: flex; justify-content: center;"></div>
+  </div>
+
+  <script>
+    const BEATS = [
+      // Opening
+      { type: 'title', chapter: 'The Assignment', text: 'The Debt Detective' },
+      { type: 'text', text: 'You\'re a researcher at AidData, specializing in tracking opaque financial flows.' },
+      { type: 'text', text: 'A mysterious $800 million port project has appeared in East Africa.' },
+      { type: 'text', text: 'But the details are murky. The terms? Unknown. The lender? Unclear. The collateral? Rumors only.' },
+      {
+        type: 'message',
+        from: 'Dr. Chen, Research Director',
+        text: 'This port deal is getting attention from multiple governments. We need to apply TUFF methodology rigorously. Map out the loan structure, identify risks, and code this with appropriate confidence levels. The development community is watching.'
+      },
+
+      // Decision 1: Source Selection
+      { type: 'title', chapter: 'Chapter One', text: 'The Paper Trail' },
+      { type: 'text', text: 'You begin searching. Three potential source pathways emerge.' },
+      {
+        type: 'question',
+        text: 'Which sources do you prioritize first?'
+      },
+      {
+        type: 'choices',
+        choices: [
+          {
+            label: 'Official government announcements and press releases from both countries',
+            hint: 'Safe but incomplete',
+            delta: 1,
+            badge: 'moderate',
+            why: 'Official sources are reliable but rarely disclose sensitive terms like interest rates or collateral. You\'ll get project existence confirmation, but critical financial details will remain hidden. This is a starting point, not an endpoint.'
+          },
+          {
+            label: 'Parliamentary debt reports, IMF Article IV consultations, and World Bank debt sustainability analyses',
+            hint: 'The TUFF gold standard',
+            delta: 2,
+            badge: 'strong',
+            why: 'These authoritative sources often contain detailed loan terms buried in annexes and footnotes. IMF and World Bank reports are particularly valuable—they have access to confidential debt data and professional obligations to report accurately. This is textbook TUFF methodology.'
+          },
+          {
+            label: 'A single leaked loan agreement from an anonymous source',
+            hint: 'Shortcut with risks',
+            delta: -1,
+            badge: 'weak',
+            why: 'A leaked document might contain everything you need, but can you verify its authenticity? TUFF methodology requires triangulation from multiple independent sources. Relying on a single unverified leak is methodologically unsound and could damage your credibility if it\'s forged or outdated.'
+          }
+        ]
+      },
+
+      // Discovery phase
+      { type: 'text', text: 'Your search yields results. Three documents surface with different details about the port loan.' },
+      { type: 'text', text: 'A government press release mentions "$800M for port modernization."' },
+      { type: 'text', text: 'An IMF report footnote lists a "$750M concessional loan from China."' },
+      { type: 'text', text: 'A local newspaper cites "$900M in Chinese financing including commercial credit."' },
+
+      // Decision 2: Confidence Coding
+      {
+        type: 'question',
+        text: 'How do you code this project\'s confidence level?'
+      },
+      {
+        type: 'choices',
+        choices: [
+          {
+            label: 'HIGH confidence - We have multiple authoritative sources confirming the project exists',
+            hint: 'Premature certainty',
+            delta: -1,
+            badge: 'weak',
+            why: 'Yes, the project exists—but the sources disagree on fundamental details like amount and terms. High confidence requires multiple sources that corroborate specific financial details, not just project existence. You\'re conflating confirmation with precision.'
+          },
+          {
+            label: 'MEDIUM confidence - Project confirmed, but conflicting financial details require additional verification',
+            hint: 'Methodologically sound',
+            delta: 2,
+            badge: 'strong',
+            why: 'Exactly right. You have credible evidence the project is real, but the $150M spread in reported amounts signals incomplete information. Medium confidence accurately reflects your epistemic state: solid on existence, uncertain on specifics. This is intellectually honest coding.'
+          },
+          {
+            label: 'LOW confidence - Too many contradictions; exclude this project until perfect clarity emerges',
+            hint: 'Overcautious',
+            delta: 0,
+            badge: 'moderate',
+            why: 'Some ambiguity doesn\'t justify excluding a project entirely. TUFF methodology embraces uncertainty through confidence coding rather than demanding impossible standards of proof. You\'d be omitting real financial flows from the dataset, which undermines comprehensiveness.'
+          }
+        ]
+      },
+
+      // Collateral discovery
+      { type: 'title', chapter: 'Chapter Two', text: 'Hidden Leverage' },
+      { type: 'text', text: 'Three weeks later, you find a commodity export agreement buried in a parliamentary report.' },
+      { type: 'text', text: 'It references "port-related obligations" and mentions a dedicated foreign currency account managed by a Chinese state-owned bank.' },
+      {
+        type: 'message',
+        from: 'Senior Analyst',
+        text: 'This looks like resource-backed lending. If the borrower defaults, China might have the right to sweep foreign currency from commodity exports. This is exactly the kind of collateralization pattern we\'ve been tracking in the Belt and Road Reboot research.'
+      },
+
+      // Decision 3: Investigation depth
+      {
+        type: 'question',
+        text: 'How do you proceed with the collateral evidence?'
+      },
+      {
+        type: 'choices',
+        choices: [
+          {
+            label: 'Deep dive: Map the full collateral structure, identify commodity flows, trace escrow account terms',
+            hint: 'Comprehensive investigation',
+            delta: 2,
+            badge: 'strong',
+            why: 'This is how you build research infrastructure. Understanding collateralization patterns helps you spot them in other projects and contributes to systematic knowledge about Chinese lending practices. The extra effort yields reusable insights that benefit the entire research community.'
+          },
+          {
+            label: 'Document it: Note the collateral exists in your coding, include the source, move forward',
+            hint: 'Adequate diligence',
+            delta: 1,
+            badge: 'moderate',
+            why: 'This meets minimum standards—you\'re not ignoring important information. But you\'re missing an opportunity to understand the mechanism in detail, which limits your ability to recognize similar patterns elsewhere and weakens your explanatory power in the final analysis.'
+          },
+          {
+            label: 'Flag concerns: Mention potential collateral in limitations section; avoid definitive claims',
+            hint: 'Excessive hedging',
+            delta: -1,
+            badge: 'weak',
+            why: 'You have documentary evidence of collateralization—a parliamentary report is a high-quality source. Relegating it to "potential concerns" undersells what you actually know. The dataset is designed to handle uncertainty through confidence coding, not by avoiding clear findings.'
+          }
+        ]
+      },
+
+      // ESG discovery
+      { type: 'title', chapter: 'Chapter Three', text: 'Environmental Shadows' },
+      { type: 'text', text: 'A local environmental NGO publishes a report. The port expansion will displace a fishing community and threatens a coral reef ecosystem.' },
+      { type: 'text', text: 'The project\'s environmental impact assessment is not publicly available.' },
+      {
+        type: 'message',
+        from: 'Dr. Chen, Research Director',
+        text: 'This raises ESG risk flags. Our data shows 53% of China\'s infrastructure portfolio now has significant environmental, social, or governance risk exposure. But our mandate is tracking financial flows, not environmental advocacy. Where do we draw the line?'
+      },
+
+      // Decision 4: ESG scope
+      {
+        type: 'question',
+        text: 'How do you handle the environmental concerns?'
+      },
+      {
+        type: 'choices',
+        choices: [
+          {
+            label: 'Comprehensive ESG coding: Document displacement risks, environmental impacts, and safeguard gaps systematically',
+            hint: 'Full methodological integration',
+            delta: 2,
+            badge: 'strong',
+            why: 'ESG risk is material to debt sustainability and project success. GCDF methodology explicitly tracks environmental, social, and governance risks because they predict suspension, cancellation, and reputation damage. Ignoring these factors would give users an incomplete picture of project viability.'
+          },
+          {
+            label: 'Financial focus only: We\'re debt researchers, not environmentalists. Stick to loan terms and repayment risks',
+            hint: 'Narrow mandate interpretation',
+            delta: -1,
+            badge: 'weak',
+            why: 'This artificially separates financial risk from implementation risk. ESG problems lead to project delays, cost overruns, civil society opposition, and political backlash—all of which affect debt sustainability. You\'re ignoring predictive variables that matter to your core mission.'
+          },
+          {
+            label: 'Balanced approach: Code major ESG risks that could affect project implementation, without duplicating NGO work',
+            hint: 'Pragmatic scope',
+            delta: 1,
+            badge: 'moderate',
+            why: 'Reasonable, but you\'re leaving value on the table. The GCDF dataset has become authoritative precisely because it integrated ESG tracking systematically. Half measures make it harder to compare across projects and identify portfolio-wide patterns in Chinese safeguard evolution.'
+          }
+        ]
+      },
+
+      // Pressure mounts
+      { type: 'title', chapter: 'Chapter Four', text: 'The Pressure Mounts' },
+      { type: 'text', text: 'Two months into your research, a major newspaper publishes a story about the port deal.' },
+      { type: 'text', text: 'They cite "experts" claiming the loan is a "debt trap." The story goes viral.' },
+      { type: 'text', text: 'Your inbox fills with media requests. "Can you confirm the loan terms? What\'s the interest rate? Is the country\'s debt sustainable?"' },
+      {
+        type: 'message',
+        from: 'Communications Director',
+        text: 'The narrative is running ahead of the evidence. We could share your preliminary findings now and shape the conversation, or wait until our research is bulletproof. But if we wait too long, we become irrelevant. What\'s the call?'
+      },
+
+      // Decision 5: Publication timing
+      {
+        type: 'question',
+        text: 'When do you share your findings?'
+      },
+      {
+        type: 'choices',
+        choices: [
+          {
+            label: 'Publish now: Release preliminary findings with clear confidence levels and caveats about uncertainty',
+            hint: 'Timely transparency',
+            delta: 0,
+            badge: 'moderate',
+            why: 'This captures media attention but risks premature conclusions. You\'re being transparent about uncertainty, which is good—but preliminary findings might be misinterpreted or weaponized by advocates on all sides. The TUFF reputation was built on thoroughness, not speed.'
+          },
+          {
+            label: 'Strategic patience: Complete verification, publish when confident, even if it takes six more months',
+            hint: 'Quality over speed',
+            delta: 2,
+            badge: 'strong',
+            why: 'TUFF methodology\'s credibility rests on this principle: get it right, not first. The dataset is cited by IMF, World Bank, and academic research precisely because it prioritizes accuracy over timeliness. Your findings will have greater impact when they\'re unimpeachable.'
+          },
+          {
+            label: 'Compete on speed: Rush to publish before competitors, even if some details remain unverified',
+            hint: 'Reputational risk',
+            delta: -2,
+            badge: 'weak',
+            why: 'This sacrifices your competitive advantage—methodological rigor—to compete on a dimension where journalism and think tanks already dominate. If you publish shakily verified claims and get key details wrong, you undermine trust in the entire GCDF dataset. Speed is seductive but strategically misguided.'
+          }
+        ]
+      },
+
+      // Attribution complexity
+      { type: 'title', chapter: 'Chapter Five', text: 'The Attribution Puzzle' },
+      { type: 'text', text: 'Your investigation reveals the lender is not on mainland China at all.' },
+      { type: 'text', text: 'The loan originated from a Hong Kong subsidiary of China Development Bank, incorporated in the Cayman Islands, lending through a Luxembourg SPV.' },
+      { type: 'text', text: 'On paper, the creditor jurisdiction is Luxembourg. But ultimate beneficial ownership traces to Beijing.' },
+      {
+        type: 'message',
+        from: 'Data Manager',
+        text: 'This is exactly the pattern the 2023 Belt and Road Reboot report warned about: nearly a third of China\'s overseas lending now originates from offshore entities. How do we code this without being misleading—or losing the thread entirely?'
+      },
+
+      // Decision 6: Attribution
+      {
+        type: 'question',
+        text: 'How do you attribute this loan in the dataset?'
+      },
+      {
+        type: 'choices',
+        choices: [
+          {
+            label: 'Code as Chinese lending: Follow ultimate beneficial ownership to China Development Bank, note offshore structure',
+            hint: 'Economic substance approach',
+            delta: 2,
+            badge: 'strong',
+            why: 'This applies the economic substance doctrine: look past legal form to functional reality. The loan is directed by Chinese policy objectives, funded by Chinese capital, and serves Chinese strategic interests. Offshore incorporation is a financial engineering choice, not a change in fundamental character. Document both the structure and the substance.'
+          },
+          {
+            label: 'Code as Luxembourg lending: Use jurisdiction of immediate creditor to maintain consistency with international reporting systems',
+            hint: 'False precision',
+            delta: -2,
+            badge: 'weak',
+            why: 'This is exactly how China\'s overseas lending is "going dark" in official statistics. You\'d be complicit in opacity by privileging legal form over economic reality. The whole point of TUFF methodology is to see through these veils, not reinforce them.'
+          },
+          {
+            label: 'Dual coding: Flag both Chinese beneficial ownership and offshore legal structure as separate variables',
+            hint: 'Maximum transparency',
+            delta: 1,
+            badge: 'moderate',
+            why: 'This provides flexibility for different use cases—some users care about beneficial ownership, others about immediate creditor. But it risks confusion if users don\'t understand the distinction. Still, transparency about structural complexity is better than false simplicity.'
+          }
+        ]
+      },
+
+      // The final decision
+      { type: 'title', chapter: 'Chapter Six', text: 'The Final Call' },
+      { type: 'text', text: 'Six months have passed. Your research is complete.' },
+      { type: 'text', text: 'You\'ve documented the $800M port loan with high confidence, mapped the collateral structure, coded ESG risks, and traced the offshore lending chain.' },
+      { type: 'text', text: 'Now comes the question that will define the impact of your work.' },
+      {
+        type: 'message',
+        from: 'Dr. Chen, Research Director',
+        text: 'We have options for how to release this. Public dataset release through our dashboard? Confidential briefing for the borrowing country\'s government? Publish the academic paper first and let the data follow? Each approach has trade-offs for transparency, impact, and relationships. What do you recommend?'
+      },
+
+      // Decision 7: Release strategy
+      {
+        type: 'question',
+        text: 'How do you share your findings with the world?'
+      },
+      {
+        type: 'choices',
+        choices: [
+          {
+            label: 'Full public release: Making your findings immediately available to the public, publish working paper, hold press briefing',
+            hint: 'Maximum transparency',
+            delta: 2,
+            badge: 'strong',
+            why: 'This is the gold standard for research transparency and democratizes access to critical information. Borrowing countries, civil society, journalists, and researchers worldwide can all use the findings simultaneously. It maximizes your contribution to the global knowledge commons and reinforces the TUFF methodology\'s foundational commitment to openness.'
+          },
+          {
+            label: 'Stakeholder preview: Brief the borrowing country\'s government privately first, then public release after 30 days',
+            hint: 'Relationship management',
+            delta: 0,
+            badge: 'moderate',
+            why: 'This shows respect for sovereign governments and might preserve research access. But it creates two-tier information asymmetry—the government gets advance warning while citizens, parliament, and media remain in the dark. It also risks the government pressuring you to modify findings or delay publication indefinitely.'
+          },
+          {
+            label: 'Controlled distribution: Share only with select policymakers and researchers; keep raw data proprietary',
+            hint: 'Undermining the mission',
+            delta: -2,
+            badge: 'weak',
+            why: 'This betrays the entire TUFF methodology ethos. The GCDF dataset\'s authority comes from its public accessibility—anyone can verify, critique, or build upon your work. Hoarding findings creates information asymmetry, reduces accountability, and transforms research into a tool of influence rather than knowledge. This path leads to irrelevance.'
+          }
+        ]
+      },
+
+      // Final report
+      { type: 'title', chapter: 'Journey Complete', text: 'Your TUFF Methodology Score' },
+      { type: 'report' }
+    ];
+
+    let currentBeat = 0;
+    let score = 0;
+    let decisionCount = 0;
+    const totalDecisions = 7;
+    let selectedChoices = [];
+    let awaitingChoice = false;
+
+    function updateProgress() {
+      const progress = (decisionCount / totalDecisions) * 100;
+      const fill = document.getElementById('progressFill');
+      if (fill) fill.style.width = progress + '%';
+    }
+
+    function renderBeat() {
+      const beat = BEATS[currentBeat];
+      const app = document.getElementById('app');
+
+      // Clear previous
+      app.innerHTML = '';
+
+      // Create CARD container
+      const card = document.createElement('div');
+      card.className = 'content-card';
+
+      // Different Content Types
+      if (beat.type === 'title') {
+        const iconSvg = getChapterIcon(beat.chapter);
+        card.innerHTML = `
+          <div class="chapter">${beat.chapter}</div>
+          ${iconSvg}
+          <h1 class="title">${beat.text}</h1>
+          <button class="next-btn" onclick="nextBeat()">
+            <span>Begin Investigation</span>
+          </button>
+        `;
+      }
+      else if (beat.type === 'text') {
+        card.innerHTML = `
+          <p class="text">${beat.text}</p>
+          <button class="next-btn" onclick="nextBeat()">
+            <span>Continue</span>
+          </button>
+        `;
+      }
+      else if (beat.type === 'message') {
+        card.innerHTML = `
+          <div class="message">
+            <div class="message-from">${beat.from}</div>
+            <div class="message-text">"${beat.text}"</div>
+          </div>
+          <button class="next-btn" onclick="nextBeat()">
+            <span>Acknowledge</span>
+          </button>
+        `;
+      }
+      else if (beat.type === 'question') {
+        let html = `<div class="question">${beat.text}</div>`;
+        html += `<button class="next-btn" onclick="nextBeat()">
+            <span>Review Options</span>
+          </button>`;
+        card.innerHTML = html;
+      }
+      else if (beat.type === 'choices') {
+        awaitingChoice = true;
+        const container = document.createElement('div');
+        container.className = 'choices-container';
+
+        beat.choices.forEach((choice, idx) => {
+          const choiceEl = document.createElement('div');
+          choiceEl.className = 'choice';
+          choiceEl.innerHTML = `
+            <span class="choice-label">${choice.label}</span>
+          `;
+          choiceEl.onclick = () => selectChoice(idx, beat.choices);
+          container.appendChild(choiceEl);
+        });
+
+        card.appendChild(container); // Add choices to card
+      }
+      else if (beat.type === 'report') {
+        const feedback = getScoreFeedback(score);
+        card.innerHTML = `
+          <div class="report-score">${score}</div>
+          <div class="text" style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--secondary);">TUFF Methodology Score</div>
+          
+          <div class="message" style="margin: 24px 0; background: #fff; border-left: 4px solid var(--primary);">
+            <div class="message-from" style="color: var(--primary);">${feedback.title}</div>
+            <div class="message-text">${feedback.text}</div>
+          </div>
+
+          <div class="text" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #eee; font-style: italic; color: #666;">
+            With your methodology training complete, you are prepared to navigate the GCDF Dashboard's map, table, and chart views.
+          </div>
+          <button class="next-btn" onclick="location.reload()" style="margin-top: 24px; background: transparent; border: 1px solid var(--primary); color: var(--primary);">
+            <span>Restart Investigation</span>
+          </button>
+        `;
+      }
+
+      app.appendChild(card);
+    }
+
+    function selectChoice(idx, choices) {
+      if (!awaitingChoice) return;
+      awaitingChoice = false;
+
+      const choice = choices[idx];
+      score += choice.delta;
+      decisionCount++;
+      selectedChoices.push(choice);
+      updateProgress();
+
+      // Update UI to show feedback
+      // Show Loading State
+      const card = document.querySelector('.content-card');
+      card.innerHTML = `
+        <div class="loader-container">
+          <div class="spinner"></div>
+          <div class="loading-text">Analyzing Data...</div>
+        </div>
+      `;
+
+      // Remove exit animation if present
+      card.classList.remove('exit-left');
+
+      // Delay for tension
+      setTimeout(() => {
+        card.innerHTML = ''; // Clear loader
+
+        const feedbackContainer = document.createElement('div');
+        feedbackContainer.className = 'feedback-container';
+
+        let badgeClass = choice.badge;
+
+        feedbackContainer.innerHTML = `
+          <div class="badge ${badgeClass}">${choice.badge}</div>
+
+          <div class="feedback-text">${choice.why}</div>
+          <button class="next-btn" onclick="nextBeat()" style="margin: 40px auto 0;">
+              <span>Continue</span>
+          </button>
+        `;
+
+        // Fade in feedback
+        feedbackContainer.style.opacity = '0';
+        feedbackContainer.style.animation = 'fadeInUp 0.6s ease forwards';
+
+        card.appendChild(feedbackContainer);
+      }, 1500);
+    }
+
+
+
+    function getChapterIcon(chapter) {
+      // Return specific SVG based on chapter
+      if (chapter.includes('One')) {
+        // Document / Discovery
+        return `<svg class="chapter-icon" viewBox="0 0 24 24">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>`;
+      }
+      if (chapter.includes('Two')) {
+        // Network / Nodes
+        return `<svg class="chapter-icon" viewBox="0 0 24 24">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+        </svg>`;
+      }
+      if (chapter.includes('Three')) {
+        // Leaf / ESG
+        return `<svg class="chapter-icon" viewBox="0 0 24 24">
+          <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
+          <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+        </svg>`;
+      }
+      if (chapter.includes('Four')) {
+        // Rising Chart / Pressure
+        return `<svg class="chapter-icon" viewBox="0 0 24 24">
+          <line x1="12" y1="20" x2="12" y2="10"></line>
+          <line x1="18" y1="20" x2="18" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="16"></line>
+        </svg>`;
+      }
+      return '';
+    }
+
+    function getScoreFeedback(score) {
+      if (score > 8) {
+        return {
+          title: "Methodology Robust",
+          text: "Your rigorous triangulation has produced a high-confidence dataset suitable for policy analysis."
+        };
+      } else if (score >= 4) {
+        return {
+          title: "Methodology Sound",
+          text: "Your analysis is directionally accurate, though some financial details remain opaque pending further sources."
+        };
+      } else {
+        return {
+          title: "Preliminary Assessment",
+          text: "Significant data gaps remain. This project requires additional authoritative sources before it can be coded with confidence."
+        };
+      }
+    }
+
+    function nextBeat() {
+      const card = document.querySelector('.content-card');
+      if (card) {
+        card.classList.add('exit-left');
+        setTimeout(() => {
+          currentBeat++;
+          if (currentBeat >= BEATS.length) {
+            // End? Loop? For now restart
+            currentBeat = 0;
+            score = 0;
+            decisionCount = 0;
+            updateProgress();
+          }
+          renderBeat();
+        }, 500);
+      } else {
+        currentBeat++;
+        renderBeat();
+      }
+    }
+
+    // Keyboard support - simplified
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        // Check if there's a visible next button
+        const nextBtn = document.querySelector('.next-btn');
+        if (nextBtn && nextBtn.checkVisibility()) {
+          nextBtn.click();
+        }
+      }
+    });
+
+    // Init
+    updateProgress();
+    renderBeat();
+  </script>
+</body>
+
+</html>

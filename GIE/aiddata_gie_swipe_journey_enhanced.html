@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <title>The Port Evaluation</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+      /* Palette */
+      --primary: #115740;
+      --primary-dark: #0a3828;
+      --secondary: #d2b070;
+      --secondary-light: #f5e6c8;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --bg-page: #F8F9FA;
+      --bg-card: #FFFFFF;
+      --success: #059669;
+      --error: #dc2626;
+      --border: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background: rgba(0, 0, 0, 0.05);
+      z-index: 100;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    .content-card {
+      background: var(--bg-card);
+      width: 100%;
+      max-width: 680px;
+      padding: 48px;
+      border-radius: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: cardEntrance 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      position: relative;
+    }
+
+    .content-card.exit-left {
+      animation: cardExitLeft 0.5s ease-in forwards;
+    }
+
+    @keyframes cardEntrance {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes cardExitLeft {
+      to {
+        opacity: 0;
+        transform: translateX(-40px);
+      }
+    }
+
+    /* Typography */
+    .chapter {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--secondary);
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    .title {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--primary);
+      margin-bottom: 32px;
+      line-height: 1.1;
+    }
+
+    .text {
+      font-size: 20px;
+      line-height: 1.6;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+
+    /* Chapter Icons */
+    .chapter-icon {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 24px;
+      stroke-width: 1.5;
+      stroke: var(--primary);
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: draw 2s ease forwards, pulse 3s infinite 2s;
+    }
+
+    @keyframes draw {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.02);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    /* Choices */
+    .choices-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .choice {
+      background: #F9FAFB;
+      border: 2px solid transparent;
+      padding: 24px;
+      border-radius: 16px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .choice:hover {
+      background: #FFFFFF;
+      border-color: var(--secondary);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .choice-label {
+      font-weight: 600;
+      color: var(--text-main);
+      font-size: 18px;
+    }
+
+    /* Buttons */
+    .next-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 24px;
+    }
+
+    .next-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(17, 87, 64, 0.2);
+    }
+
+    /* Loading State */
+    .loader-container {
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .loading-text {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Feedback */
+    .feedback-container {
+      text-align: center;
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 24px;
+    }
+
+    .badge.strong {
+      background: #DCFCE7;
+      color: #166534;
+    }
+
+    .badge.weak {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+
+    .badge.moderate {
+      background: #FEF3C7;
+      color: #92400E;
+    }
+
+    .feedback-text {
+      font-size: 20px;
+      color: var(--text-main);
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    .message {
+      background: #F9FAFB;
+      border-left: 4px solid var(--secondary);
+      padding: 24px;
+      border-radius: 8px;
+      text-align: left;
+      margin-bottom: 32px;
+    }
+
+    .message-from {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .message-text {
+      font-size: 16px;
+      font-style: italic;
+      color: var(--text-main);
+    }
+
+    .report-score {
+      font-size: 96px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 16px;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="progress-container">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <div class="screen">
+    <div id="app" style="width: 100%; display: flex; justify-content: center;"></div>
+  </div>
+
+  <script>
+    const BEATS = [
+      // Introduction
+      { type: 'title', chapter: 'Chapter 1', text: 'The Setup' },
+      { type: 'text', text: 'Six Months Ago.' },
+      { type: 'text', text: 'A country in West Africa announces a massive new port built with Chinese financing.' },
+      { type: 'text', text: 'Your research team is asked to evaluate its economic impact using satellite nighttime lights.' },
+      { type: 'text', text: 'Sounds straightforward.' },
+      { type: 'text', text: 'But every decision you make will ripple through your findings.' },
+
+      // Choice 1: Method
+      { type: 'title', chapter: 'Chapter 2', text: 'Method Selection' },
+      {
+        type: 'message',
+        from: 'Dr. Sarah Chen, Research Director',
+        text: "We need to decide fast. Funding depends on demonstrating rigor. What method should we use?"
+      },
+      {
+        type: 'question',
+        text: 'How will you design the evaluation?'
+      },
+      {
+        type: 'choices',
+        choices: [
+          {
+            label: 'Difference-in-differences with matched controls based on pre-treatment characteristics.',
+            hint: 'Gold standard',
+            delta: 2,
+            badge: 'strong',
+            why: 'DiD with matched controls approximates random assignment. It isolates causal effects and makes assumptions transparent. This is what rigorous evaluation looks like.'
+          },
+          {
+            label: 'Simple before-after comparison within the affected region.',
+            hint: 'Quick and easy',
+            delta: -1,
+            badge: 'weak',
+            why: 'Before-after conflates the port effect with everything else happening over time. No counterfactual, no credibility.'
+          },
+          {
+            label: 'Descriptive maps showing nightlight trends, no formal comparison.',
+            hint: 'Visual storytelling',
+            delta: -2,
+            badge: 'weak',
+            why: 'Maps without statistical inference offer no evidence of impact. Pretty pictures do not equal evaluation.'
+          }
+        ]
+      },
+
+      // Choice 2: First findings
+      { type: 'title', chapter: 'First Findings', text: 'The Data Speaks' },
+      { type: 'text', text: 'You run the numbers.' },
+      { type: 'text', text: 'Nightlights increased 18% near the port compared to controls.' },
+      { type: 'text', text: 'Statistically significant. Clear effect.' },
+      { type: 'text', text: 'But is it real?' },
+      {
+        type: 'message',
+        from: 'Dr. James Okoro, Local Economist',
+        text: "This looks impressive, but the timing worries me. A new oil refinery opened nearby the same year. Could that be driving the lights?"
+      },
+      {
+        type: 'question',
+        text: 'What do you do?'
+      },
+      {
+        type: 'choices',
+        choices: [
+          {
+            label: 'Acknowledge and test: Run robustness checks excluding areas near the refinery. Report sensitivity.',
+            hint: 'Transparent rigor',
+            delta: 2,
+            badge: 'strong',
+            why: 'Ignoring confounders destroys credibility. Testing sensitivity shows you take threats seriously. This is what honest science looks like.'
+          },
+          {
+            label: 'Assume the refinery effect is negligible and proceed without adjustment.',
+            hint: 'Simplifying assumption',
+            delta: -1,
+            badge: 'weak',
+            why: 'Hoping confounders away is not a strategy. Major infrastructure changes demand explicit consideration.'
+          },
+          {
+            label: 'Avoid mentioning the refinery to keep the narrative clean.',
+            hint: 'Streamlined story',
+            delta: -2,
+            badge: 'weak',
+            why: 'Withholding known threats to validity is academic malpractice. Evaluations must report what threatens findings, not hide it.'
+          }
+        ]
+      },
+
+      // Choice 3: Pre-Analysis Plan
+      { type: 'title', chapter: 'Pre-Analysis Planning', text: 'Getting Ahead of Yourself' },
+      { type: 'text', text: 'A month in, you realize the project scope is expanding.' },
+      { type: 'text', text: 'Multiple stakeholders want different answers.' },
+      { type: 'text', text: 'The temptation to explore is strong.' },
+      {
+        type: 'message',
+        from: 'Policy Advisor',
+        text: "Can we test whether the port boosted manufacturing? Or services? Or maybe just check which districts benefited most? Let's see what the data shows."
+      },
+      {
+        type: 'question',
+        text: 'How do you respond?'
+      },
+      {
+        type: 'choices',
+        choices: [
+          {
+            label: 'Draft a pre-analysis plan specifying hypotheses and methods before running new tests.',
+            hint: 'Disciplined approach',
+            delta: 2,
+            badge: 'strong',
+            why: 'Pre-specification prevents p-hacking and clarifies what\'s confirmatory vs. exploratory. Transparency earns trust.'
+          },
+          {
+            label: 'Run exploratory analyses but clearly label them as hypothesis-generating in the report.',
+            hint: 'Balanced transparency',
+            delta: 1,
+            badge: 'moderate',
+            why: 'Better than silent exploration, but less protective against bias than pre-specification. Acceptable compromise if labeled honestly.'
+          },
+          {
+            label: 'Test everything and report only significant results without distinguishing planned vs. exploratory analyses.',
+            hint: 'Flexibility',
+            delta: -2,
+            badge: 'weak',
+            why: 'This is textbook p-hacking. Results look stronger than warranted, and credibility collapses under scrutiny.'
+          }
+        ]
+      },
+
+      // Choice 4: Confounder control
+      { type: 'title', chapter: 'Confounder Control', text: 'What Else Matters?' },
+      { type: 'text', text: 'Your results hold up in initial robustness checks.' },
+      { type: 'text', text: 'But a peer reviewer raises a new concern.' },
+      {
+        type: 'message',
+        from: 'Anonymous Reviewer #2',
+        text: "Did you control for roads? Ports don't operate in isolation. If new roads were built simultaneously, your estimate conflates port and road effects."
+      },
+      {
+        type: 'question',
+        text: 'What do you do?'
+      },
+      {
+        type: 'choices',
+        choices: [
+          {
+            label: 'Obtain road data, model distance to road improvements, and test if results change when controlling for road access.',
+            hint: 'Comprehensive control',
+            delta: 2,
+            badge: 'strong',
+            why: 'Infrastructure projects cluster. Disentangling effects requires controlling for complementary investments. This is rigorous evaluation.'
+          },
+          {
+            label: 'Acknowledge roads as a limitation in the discussion but argue data constraints prevent formal testing.',
+            hint: 'Honest limitation',
+            delta: 0,
+            badge: 'moderate',
+            why: 'Better than ignoring it, but leaves a known confounder unaddressed. Undermines confidence in the estimate.'
+          },
+          {
+            label: 'Dismiss the concern as beyond scope. Argue the port is the "primary" intervention.',
+            hint: 'Narrow framing',
+            delta: -1,
+            badge: 'weak',
+            why: 'Declaring something beyond scope doesn\'t make it irrelevant. Reviewers and users will rightly question the findings.'
+          }
+        ]
+      },
+
+      // Choice 5: Equity
+      { type: 'title', chapter: 'Equity Analysis', text: 'Who Benefits?' },
+      { type: 'text', text: 'Aggregate results show positive effects.' },
+      { type: 'text', text: 'But averages can hide inequality.' },
+      {
+        type: 'message',
+        from: 'Civil Society Leader',
+        text: "Your report says the port helped the region. But my community, right next to the port, saw no improvement. Who actually benefited?"
+      },
+      {
+        type: 'question',
+        text: 'How do you address distributional effects?'
+      },
+      {
+        type: 'choices',
+        choices: [
+          {
+            label: 'Full disaggregation: Report effects by settlement type and wealth. Flag if only affluent areas benefit.',
+            hint: 'Comprehensive equity lens',
+            delta: 2,
+            badge: 'strong',
+            why: 'Disaggregation surfaces inequality that aggregates hide. If only wealthy areas benefit, that\'s critical for policy. This is what rigorous evaluation looks like.'
+          },
+          {
+            label: 'Report aggregates with brief mention of "potential heterogeneity" in limitations, without testing.',
+            hint: 'Superficial nod',
+            delta: 0,
+            badge: 'moderate',
+            why: 'Better than nothing, but leaves stakeholders guessing about equity. Minimal due diligence.'
+          },
+          {
+            label: 'Stick to aggregates only. Claim distributional analysis is beyond scope since satellites don\'t measure income.',
+            hint: 'Missed opportunity',
+            delta: -1,
+            badge: 'weak',
+            why: 'Satellites can proxy wealth and urbanization. Dismissing equity analysis shirks professional responsibility.'
+          }
+        ]
+      },
+
+      // Final
+      { type: 'title', chapter: 'Final Chapter', text: 'Six Months Later' },
+      { type: 'text', text: "You're reviewing the final draft." },
+      { type: 'text', text: 'The work is done, but one question remains:' },
+      { type: 'text', text: 'What happens next?' },
+      {
+        type: 'message',
+        from: 'Dr. Sarah Chen, Research Director',
+        text: "This is strong work. But what's our recommendation for follow-up? Ground validation? Replication materials? Or do we just ship it and move on?"
+      },
+      {
+        type: 'question',
+        text: 'What do you recommend?'
+      },
+      {
+        type: 'choices',
+        choices: [
+          {
+            label: 'Recommend follow-on: Ground validation, replication materials registration, GeoQuery integration for reusable extraction.',
+            hint: 'Building infrastructure',
+            delta: 2,
+            badge: 'strong',
+            why: 'Follow-ons deepen credibility and enable learning. Standardized extraction supports iteration. You\'re building research infrastructure, not just a report.'
+          },
+          {
+            label: 'Declare results final and discourage replication to protect the narrative.',
+            hint: 'Short-term thinking',
+            delta: -2,
+            badge: 'weak',
+            why: 'Discouraging replication is antithetical to science. Signals insecurity about methods. Actively harms research credibility.'
+          },
+          {
+            label: 'No next steps needed. We used satellites, so it\'s already modern enough.',
+            hint: 'Complacency',
+            delta: -1,
+            badge: 'weak',
+            why: 'Technology ≠ rigor. There are always improvements possible. Declaring premature victory limits learning.'
+          }
+        ]
+      },
+
+      // Report
+      { type: 'report' }
+    ];
+
+    let currentBeat = 0;
+    let score = 0;
+    let decisionCount = 0;
+    const totalDecisions = 6;
+    let selectedChoices = [];
+    let awaitingChoice = false;
+
+    function updateProgress() {
+      const progress = (decisionCount / totalDecisions) * 100;
+      const fill = document.getElementById('progressFill');
+      if (fill) fill.style.width = progress + '%';
+    }
+
+    function renderBeat() {
+      const beat = BEATS[currentBeat];
+      const app = document.getElementById('app');
+
+      // Clear previous
+      app.innerHTML = '';
+
+      // Create CARD container
+      const card = document.createElement('div');
+      card.className = 'content-card';
+
+      // Different Content Types
+      if (beat.type === 'title') {
+        const iconSvg = getChapterIcon(beat.chapter);
+        card.innerHTML = `
+          <div class="chapter">${beat.chapter}</div>
+          ${iconSvg}
+          <h1 class="title">${beat.text}</h1>
+          <button class="next-btn" onclick="nextBeat()">
+            <span>Begin Investigation</span>
+          </button>
+        `;
+      }
+      else if (beat.type === 'text') {
+        card.innerHTML = `
+          <p class="text">${beat.text}</p>
+          <button class="next-btn" onclick="nextBeat()">
+            <span>Continue</span>
+          </button>
+        `;
+      }
+      else if (beat.type === 'message') {
+        card.innerHTML = `
+          <div class="message">
+            <div class="message-from">${beat.from}</div>
+            <div class="message-text">"${beat.text}"</div>
+          </div>
+          <button class="next-btn" onclick="nextBeat()">
+            <span>Acknowledge</span>
+          </button>
+        `;
+      }
+      else if (beat.type === 'question') {
+        let html = `<div class="question">${beat.text}</div>`;
+        html += `<button class="next-btn" onclick="nextBeat()">
+            <span>Review Options</span>
+          </button>`;
+        card.innerHTML = html;
+      }
+      else if (beat.type === 'choices') {
+        awaitingChoice = true;
+        const container = document.createElement('div');
+        container.className = 'choices-container';
+
+        beat.choices.forEach((choice, idx) => {
+          const choiceEl = document.createElement('div');
+          choiceEl.className = 'choice';
+          choiceEl.innerHTML = `
+            <span class="choice-label">${choice.label}</span>
+          `;
+          choiceEl.onclick = () => selectChoice(idx, beat.choices);
+          container.appendChild(choiceEl);
+        });
+
+        card.appendChild(container); // Add choices to card
+      }
+      else if (beat.type === 'report') {
+        const feedback = getScoreFeedback(score);
+        card.innerHTML = `
+          <div class="report-score">${score}</div>
+          <div class="text" style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--secondary);">Methodology Score</div>
+          
+          <div class="message" style="margin: 24px 0; background: #fff; border-left: 4px solid var(--primary);">
+            <div class="message-from" style="color: var(--primary);">${feedback.title}</div>
+            <div class="message-text">${feedback.text}</div>
+          </div>
+
+          <div class="text" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #eee; font-style: italic; color: #666;">
+            With your evaluation training complete, you are prepared to navigate the GIE Dashboard's map, table, and chart views.
+          </div>
+          <button class="next-btn" onclick="location.reload()" style="margin-top: 24px; background: transparent; border: 1px solid var(--primary); color: var(--primary);">
+            <span>Restart Investigation</span>
+          </button>
+        `;
+      }
+
+      app.appendChild(card);
+    }
+
+    function selectChoice(idx, choices) {
+      if (!awaitingChoice) return;
+      awaitingChoice = false;
+
+      const choice = choices[idx];
+      score += choice.delta;
+      decisionCount++;
+      selectedChoices.push(choice);
+      updateProgress();
+
+      // Show Loading State
+      const card = document.querySelector('.content-card');
+      card.innerHTML = `
+        <div class="loader-container">
+          <div class="spinner"></div>
+          <div class="loading-text">Analyzing Evaluation...</div>
+        </div>
+      `;
+
+      // Remove exit animation if present
+      card.classList.remove('exit-left');
+
+      // Delay for tension
+      setTimeout(() => {
+        card.innerHTML = ''; // Clear loader
+
+        const feedbackContainer = document.createElement('div');
+        feedbackContainer.className = 'feedback-container';
+
+        let badgeClass = choice.badge;
+
+        feedbackContainer.innerHTML = `
+          <div class="badge ${badgeClass}">${choice.badge}</div>
+
+          <div class="feedback-text">${choice.why}</div>
+          <button class="next-btn" onclick="nextBeat()" style="margin: 40px auto 0;">
+              <span>Continue</span>
+          </button>
+        `;
+
+        // Fade in feedback
+        feedbackContainer.style.opacity = '0';
+        feedbackContainer.style.animation = 'fadeInUp 0.6s ease forwards';
+
+        card.appendChild(feedbackContainer);
+      }, 1500);
+    }
+
+    function nextBeat() {
+      const card = document.querySelector('.content-card');
+      if (card) {
+        card.classList.add('exit-left');
+      }
+
+      setTimeout(() => {
+        currentBeat++;
+        if (currentBeat >= BEATS.length) {
+          // Wrap around logic typically not reached due to report beat, but for safety
+          currentBeat = 0;
+        }
+        renderBeat();
+      }, 400); // Wait for exit animation
+    }
+
+    function getChapterIcon(chapter) {
+      if (chapter.includes('Chapter 1')) {
+        // Location/Map - The Setup
+        return `<svg class="chapter-icon" viewBox="0 0 24 24">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>`;
+      }
+      if (chapter.includes('Chapter 2')) {
+        // Gears/Tools - Method
+        return `<svg class="chapter-icon" viewBox="0 0 24 24">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+        </svg>`;
+      }
+      if (chapter.includes('Chapter 3')) {
+        // Bar Chart - Findings
+        return `<svg class="chapter-icon" viewBox="0 0 24 24">
+          <line x1="12" y1="20" x2="12" y2="10"></line>
+          <line x1="18" y1="20" x2="18" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="16"></line>
+        </svg>`;
+      }
+      if (chapter.includes('Chapter 4')) {
+        // Clipboard - Pre-Analysis
+        return `<svg class="chapter-icon" viewBox="0 0 24 24">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+        </svg>`;
+      }
+      if (chapter.includes('Chapter 5')) {
+        // Filter/Layers (Stack) - Confounder
+        return `<svg class="chapter-icon" viewBox="0 0 24 24">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>`;
+      }
+      if (chapter.includes('Chapter 6')) {
+        // People - Equity
+        return `<svg class="chapter-icon" viewBox="0 0 24 24">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>`;
+      }
+      if (chapter.includes('Final')) {
+        // Flag
+        return `<svg class="chapter-icon" viewBox="0 0 24 24">
+          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+          <line x1="4" y1="22" x2="4" y2="15"></line>
+        </svg>`;
+      }
+      return '';
+    }
+
+    function getScoreFeedback(score) {
+      if (score > 8) {
+        return {
+          title: "Methodology Robust",
+          text: "Your rigorous design isolates causal impact effectively, producing high-confidence evidence for policy."
+        };
+      } else if (score >= 4) {
+        return {
+          title: "Methodology Sound",
+          text: "Your evaluation is plausible but may contain some bias or unaddressed confounders."
+        };
+      } else {
+        return {
+          title: "Preliminary Assessment",
+          text: "Your design cannot distinguish the program's effect from other factors. More rigor is needed."
+        };
+      }
+    }
+
+    // Keyboard support - simplified
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        nextBeat();
+      }
+    });
+
+    updateProgress();
+    renderBeat();
+  </script>
+</body>
+
+</html>
